@@ -6,7 +6,7 @@ const express = require('express');
 const morgan = require('morgan');
 const app = express();
 const bodyParser = require('body-parser');
-const router = express.Router();
+// const router = express.Router();
 const routes = require('./routes/route');
 
 app.use(bodyParser());
@@ -34,7 +34,7 @@ const listener = app.listen(process.env.PORT || 3000, function () {
 // MY CODE
 
 // using routes middleware
-app.use('/', router);
+app.use('/', routes);
 
 const getUsersData = async () => {
   const users = await fetch('https://raw.githubusercontent.com/alj-devops/santa-data/master/users.json');
