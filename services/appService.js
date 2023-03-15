@@ -1,5 +1,22 @@
 const express = require('express');
-const userDatas = require('./userService');
+const fetch = require('node-fetch');
+const app = express();
+// const userDatas = require('./userService');
+app.use(express.urlencoded({ extended: true }));
+app.set('view engine', 'ejs');
+
+
+const getUsersData = async () => {
+    const users = await fetch('https://raw.githubusercontent.com/alj-devops/santa-data/master/users.json');
+    const usersData = await users.json();
+    return usersData;
+  };
+  
+  const getUserProfilesData = async () => {
+    const profiles = await fetch('https://raw.githubusercontent.com/alj-devops/santa-data/master/userProfiles.json');
+    const profilesData = await profiles.json();
+    return profilesData;
+  };
 
 // module to handle get request on localhost:3000 and load the registration form
 exports.santaForm = (req, res) =>
@@ -9,39 +26,35 @@ exports.santaForm = (req, res) =>
 
 // module to handle post request on localhost:3000 when user submits the registration form
 // form data is captured and sent back as a response
-exports.santaFormProcess = (req, res) =>
+exports.santaFormProcess = async (req, res) =>
 {  
    console.log(req.body);
-   res.write('<h1> Registration Successfull :-) </h1>');
-   res.write('<p> Name : </h1>'+ req.body.userid);
-   res.write('<p> Username : </h1>'+ req.body.wish);
    const { name, wish } = req.body;
-   const data = { name, wish };
-   console.log('server data', data)
+   const username = req.body.userid;
+   console.log('server data', req.body.userid)
  
-   // try {
-     const usersData = userDatas.getUsersData();
-     const user = usersData.find(user => user.username === name);
-     console.log('userdata', usersData);
+
+    const usersData = await getUsersData();
+    const user = usersData.find(user => user.username === username);
  
      if (!user) {
        console.log('User not registered')
-       return res.redirect('views/pages/error.ejs');
+       return res.redirect('error');
      }
  
-     const userProfilesData =  getUserProfilesData();
+     const userProfilesData = await getUserProfilesData();
      const userProfile = userProfilesData.find(profile => profile.userUid === user.uid);
-     // console.log('useprof', userProfilesData);
  
+     console.log('useprof', userProfile);
  
-     const dateOfBirth = new Date(userProfile.birthday);
-     const ageInMs = Date.now() - dateOfBirth.getTime();
-     const ageInYears = new Date(ageInMs).getUTCFullYear();
+     const birthYear  = new Date(userProfile.birthdate).getFullYear();
+     const age = new Date().getFullYear() - birthYear ;
  
-     if (ageInYears >= 10) {
+     console.log('agess  ', age);
+     if (age >= 10) {
        console.log('User is older than 10 years')
-       throw new Error('User is older than 10 years');
+       return res.redirect('oldError');
      }
-     res.redirect('views/pages/success.ejs');
+     res.redirect('../views/pages/success.ejs');
    res.end();
 }  
